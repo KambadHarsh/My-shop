@@ -1,7 +1,7 @@
-import React, { useState ,useCallback } from "react";
-import { Toast,CalloutCard, Button,  TextStyle } from '@shopify/polaris';
+import React, { useState, useCallback } from "react";
+import { Toast, CalloutCard, Button, TextStyle } from '@shopify/polaris';
 import PapaParse from 'papaparse';
-import { useAuthenticatedFetch }from '../hooks'
+import { useAuthenticatedFetch } from '../hooks'
 export default function NewImport() {
 
   const [data, setData] = useState([]);
@@ -14,24 +14,34 @@ export default function NewImport() {
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-    const parseData  =  await PapaParse.parse(event.target.result, {
+      let finalData = [];
+      const parseData = await PapaParse.parse(event.target.result, {
         header: true,
         dynamicTyping: true,
+
         complete: (parseData) => {
-          console.log(parseData,"Parse")
-          setData(parseData.data);
+          // console.log(parseData, "Parse")
+          parseData.data.map((data) => {
+            if (data.Id != null) {
+              finalData.push(data)
+              console.log(data, "Parse");
+            }
+          })
         },
         error: (error) => {
           console.error("Error parsing CSV file:", error);
         },
       });
+
+      console.log(finalData, "final data");
+      setData(finalData)
     };
     reader.readAsText(file);
   };
 
   const handleImport = async () => {
 
-    
+
     if (!data.length) {
       console.error('Please select a CSV file to import.');
       return;
@@ -57,7 +67,12 @@ export default function NewImport() {
     }
   };
 
-  return (  
+  const clearData = () => {
+    setData([]);
+    console.clear();
+  }
+
+  return (
     <div>
       <CalloutCard
         title="Import"
@@ -67,15 +82,15 @@ export default function NewImport() {
         }}
       >
         <p>Import your product files here</p>
-       
-          <input type="file" onChange={handleFileChange} accept=".csv" />
-          {data.length > 0 && (
-            <>
-              <div>Parsed Data:</div>
-              <pre>{JSON.stringify(data, null, 2)}</pre>
-            </>
-          )}
-          <Button onClick={() => setData([])} destructive>Clear Data</Button>
+
+        <input type="file" onChange={handleFileChange} accept=".csv" id="file" style={{ cursor: 'pointer' }} />
+        {data.length > 0 && (
+          <>
+            <div>Parsed Data:</div>
+            <pre>{JSON.stringify(data, null, 2)}</pre>
+          </>
+        )}
+        <Button onClick={clearData} destructive>Clear Data</Button>
 
       </CalloutCard>
     </div>
